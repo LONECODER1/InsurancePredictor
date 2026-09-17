@@ -1,0 +1,11 @@
+services:
+  insurance-predictor:
+    build:
+      context: .
+      dockerfile: DockerFile
+    container_name: insurance-predictor-api
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1

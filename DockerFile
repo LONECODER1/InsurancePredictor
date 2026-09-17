@@ -1,0 +1,31 @@
+# Use official lightweight Python image matching local environment
+FROM python:3.13-slim
+
+# Set environment variables:
+# - PYTHONUNBUFFERED=1: Ensures instant stdout/stderr logs without buffering
+# - PYTHONDONTWRITEBYTECODE=1: Avoids generating .pyc files
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Set working directory inside container
+WORKDIR /app
+
+# Copy requirements first to leverage Docker layer caching
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose port FastAPI runs on
+EXPOSE 8000
+
+# Health check to ensure the container is responsive
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+# Start the FastAPI server on 0.0.0.0 (required for container networking)
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
